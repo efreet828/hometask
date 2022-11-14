@@ -1,4 +1,3 @@
-с
 /*
  пример ввода данных для выполнения программы 
  gcc task3.c -o task3 -luv
@@ -16,6 +15,8 @@ if(адрес приема равен нашему адресу и адрес о
 
 if(iph->daddr==dst_addr && iph->saddr==src_addr) {return;}
 if(iph->daddr==src_addr && iph->saddr==dst_addr) {return;}
+
+https://gist.github.com/oro350/8269805 - интрересный вариант.
 
 при использовании разных портов строчки из void idle_callback(uv_idle_t* handle):
 unsigned int usecs=1000000;
