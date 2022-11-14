@@ -11,7 +11,11 @@
  фильтр можно поставить след вида:
 if(inet_ntoa(dest.sin_addr)==inet_ntoa(dst_addr) && inet_ntoa(dest.sin_addr)==inet_ntoa(src_addr)) {return;}
 if(inet_ntoa(dest.sin_addr)==src_addr && inet_ntoa(dest.sin_addr)==inet_ntoa(dst_addr)) {return;}
-
+при использовании разных портов строчки из void idle_callback(uv_idle_t* handle):
+unsigned int usecs=1000000;
+        usleep(usecs);
+	
+	можно смело убирать!!!
   */
 
 //
