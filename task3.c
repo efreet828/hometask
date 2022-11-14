@@ -9,8 +9,9 @@
  программа хорошо и стабильно работает если порт приема!= порт отправки(eth0 eth0  по вполне логичным причинам,
  т.к. пока нет фильтра на самим собой отправленные пакетыи  ответы на них, работать  будет через одно место)
  фильтр можно поставить след вида:
-if(inet_ntoa(dest.sin_addr)==inet_ntoa(dst_addr) && inet_ntoa(dest.sin_addr)==inet_ntoa(src_addr)) {return;}
-if(inet_ntoa(dest.sin_addr)==src_addr && inet_ntoa(dest.sin_addr)==inet_ntoa(dst_addr)) {return;}
+if(адрес отправки равен нашему адресу и адрес приема равен адресу отправки) {return;}
+if(адрес приема равен нашему адресу и адрес отправки равен адресу отправки) {return;}
+
 при использовании разных портов строчки из void idle_callback(uv_idle_t* handle):
 unsigned int usecs=1000000;
         usleep(usecs);
