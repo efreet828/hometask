@@ -12,6 +12,11 @@
 if(адрес отправки равен нашему адресу и адрес приема равен адресу отправки) {return;}
 if(адрес приема равен нашему адресу и адрес отправки равен адресу отправки) {return;}
 
+рабочий фильтр выглядит так:
+
+if(iph->daddr==dst_addr && iph->saddr==src_addr) {return;}
+if(iph->daddr==src_addr && iph->saddr==dst_addr) {return;}
+
 при использовании разных портов строчки из void idle_callback(uv_idle_t* handle):
 unsigned int usecs=1000000;
         usleep(usecs);
