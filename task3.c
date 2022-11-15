@@ -1,10 +1,12 @@
+//добавлен фильтр, работаю над тонкими настройками, сделаны определённые правки по коду.
 // продолжение следует, открыл для себя наличие bpf  SO_ATTACH_FILTER.
 // (сохраняю для себя чтоб не потерять инструкции)
 //https://www.tcpdump.org/manpages/pcap-filter.7.html
 
 /*
  пример ввода данных для выполнения программы 
- gcc task3.c -o task3 -luv
+ перед компиляцией установить sudo apt-get install libuv and sudo apt-get install libcap-dev
+ gcc task3.c -o task3 -luv -lpcap
  sudo ./task3 eth0 eth1 3512 2153 192.168.1.54 192.168.1.175
  sudo ./task3 (физ порт приема) (физ порт отправки) (порт source addr) (порт destination addr) (source ip) (destination ip) 
  для облегчения работоспособности выводится лог в  файл в  котором пишется принятый payload и инвертированный.
@@ -29,7 +31,6 @@ unsigned int usecs=1000000;
 	можно смело убирать!!!
   */
 
-//
 #include <stdio.h>
 #include <net/if.h>
 #include <assert.h>
@@ -51,6 +52,25 @@ unsigned int usecs=1000000;
 #include <sys/time.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <linux/filter.h>
+#include <pcap.h>
+
+/*#define OP_LDH (BPF_LD  | BPF_H   | BPF_ABS)
+#define OP_LDB (BPF_LD  | BPF_B   | BPF_ABS)
+#define OP_JEQ (BPF_JMP | BPF_JEQ | BPF_K)
+#define OP_RET (BPF_RET | BPF_K)
+
+static struct sock_filter bpfcode[6] = {
+	{ OP_LDH, 0, 0, 12          },	// ldh [12]
+	{ OP_JEQ, 0, 2, ETH_P_IP    },	// jeq #0x800, L2, L5
+	{ OP_LDB, 0, 0, 23          },	// ldb [23]
+	{ OP_JEQ, 0, 1, IPPROTO_UDP },	// jeq #0x6, L4, L5
+	{ OP_RET, 0, 0, 0           },	// ret #0x0
+	{ OP_RET, 0, 0, -1,         },	// ret #0xffffffff
+};*/
+
+
+
 void To_ssend(unsigned char *, int );
 void obrr(unsigned char *, int );
 unsigned short csum(unsigned char *, int );
@@ -58,7 +78,7 @@ unsigned short csum(unsigned char *, int );
 unsigned char buffer[65536];
 struct sockaddr_in addr;
 //struct sockaddr saddr;
-int saddr_size , data_size, sock_raw, a, b;
+int saddr_size , data_size, sock_raw, a, b, raaa;
 unsigned char part[65536];
 u_int32_t src_addr, dst_addr;
 u_int16_t src_port, dst_port;
@@ -108,7 +128,7 @@ void idle_callback(uv_idle_t* handle) {
         saddr_size = sizeof saddr;
 
 
-        data_size = recvfrom(sock_raw , buffer , 65536 , 0 , &saddr , (socklen_t*)&saddr_size);
+        data_size = recvfrom(raaa , buffer , 65536 , 0 , &saddr , (socklen_t*)&saddr_size);
         if(data_size <0 )
         {
           printf("Recvfrom error , failed to get packets\n");
@@ -120,8 +140,8 @@ void idle_callback(uv_idle_t* handle) {
         To_ssend(buffer, data_size);
         strcpy(buffer,"");
         strcpy(part,"");
-        unsigned int usecs=1000000;
-        usleep(usecs);
+        //unsigned int usecs=100;
+        //usleep(usecs);
 
 
 
@@ -134,12 +154,31 @@ void thread_cb(void* arg) {
         uv_idle_t idle;
         uv_idle_init(loop1, &idle);
         logfile=fopen("log.txt","w");
+
       	if(logfile==NULL)
       	{
       		printf("Unable to create log.txt file.");
       	}
-      	int raaa;
-      	raaa = socket( AF_PACKET , SOCK_RAW ,  htons(ETH_P_ALL)) ;
+        //struct sock_fprog bpf = { 6, bpfcode };
+        char errbuf[PCAP_ERRBUF_SIZE];
+
+        raaa = socket( AF_PACKET , SOCK_RAW ,  htons(ETH_P_ALL)) ;
+        pcap_t *handle;
+        handle = pcap_open_live(port, BUFSIZ, 1, 1000, errbuf);
+        struct bpf_program bfp;
+          char filter_exp[] = "dst host !192.168.1.175 and src host !192.168.1.54 and dst host !192.168.1.155 and src host !192.168.1.155" ;
+          int tmp =pcap_compile(handle, &bfp, filter_exp, 1, 0);
+          if (tmp == -1)
+          {
+          //printf("cannot pcap_compile %s\n", pcap_geterr(NULL));
+          printf("\n pcap  кривой\n");
+          exit(-1);
+          }
+        if (setsockopt(raaa, SOL_SOCKET, SO_ATTACH_FILTER, &bfp, sizeof(bfp))) {
+		          perror("setsockopt ATTACH_FILTER");
+		          return;
+	     }
+       printf("setsockopt ATTACH_FILTER is OK.\n");
         if(setsockopt(raaa , SOL_SOCKET , SO_BINDTODEVICE , port, sizeof(port))<0)
       	{
         perror("Server-setsockopt() error for SO_BINDTODEVICE");
@@ -157,7 +196,7 @@ void thread_cb(void* arg) {
       		return;
       	}
         sock_raw=raaa;
-      //  printf("Starting...\n");
+      printf("Starting...\n");
         //saddr_size = sizeof saddr;
 
         uv_idle_start(&idle, idle_callback);
@@ -254,7 +293,7 @@ void To_ssend(unsigned char *Buffer, int data_size){
 		}
 	}
   close(s);
-	
+
 
 }
 
@@ -285,6 +324,8 @@ if (iph->protocol=17) {
 
   memset(&dest, 0, sizeof(dest));
   dest.sin_addr.s_addr = iph->daddr;
+  //if(iph->daddr==dst_addr && iph->saddr==src_addr) {return;}
+//if(iph->daddr==src_addr && iph->saddr==dst_addr) {return;}
   int header_size =  sizeof(struct ethhdr) + iphdrlen + sizeof udph;
   fprintf(logfile , " ********************************************************************************************");
   fprintf(logfile , "   |-Checksum1 : %d\n",ntohs(iph->check));
@@ -367,3 +408,4 @@ int main(int argc, char *argv[]) {
 
 
   }
+
