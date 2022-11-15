@@ -43,34 +43,18 @@ https://gist.github.com/oro350/8269805 - интрересный вариант.
 #include <linux/filter.h>
 #include <pcap.h>
 
-/*#define OP_LDH (BPF_LD  | BPF_H   | BPF_ABS)
-#define OP_LDB (BPF_LD  | BPF_B   | BPF_ABS)
-#define OP_JEQ (BPF_JMP | BPF_JEQ | BPF_K)
-#define OP_RET (BPF_RET | BPF_K)
-
-static struct sock_filter bpfcode[6] = {
-	{ OP_LDH, 0, 0, 12          },	// ldh [12]
-	{ OP_JEQ, 0, 2, ETH_P_IP    },	// jeq #0x800, L2, L5
-	{ OP_LDB, 0, 0, 23          },	// ldb [23]
-	{ OP_JEQ, 0, 1, IPPROTO_UDP },	// jeq #0x6, L4, L5
-	{ OP_RET, 0, 0, 0           },	// ret #0x0
-	{ OP_RET, 0, 0, -1,         },	// ret #0xffffffff
-};*/
-
-
 
 void To_ssend(unsigned char *, int );
 void obrr(unsigned char *, int );
 unsigned short csum(unsigned char *, int );
-//unsigned char* part1;
+
 unsigned char buffer[65536];
 struct sockaddr_in addr;
-//struct sockaddr saddr;
+
 int saddr_size , data_size, sock_raw, a, b, raaa;
 unsigned char part[65536];
 u_int32_t src_addr, dst_addr;
 u_int16_t src_port, dst_port;
-//int sock_raw;
 char *port, *port1;
 int suka;
 FILE *logfile;
@@ -185,12 +169,10 @@ void thread_cb(void* arg) {
       	}
         sock_raw=raaa;
       printf("Starting...\n");
-        //saddr_size = sizeof saddr;
-
+        
         uv_idle_start(&idle, idle_callback);
         uv_run(loop1, UV_RUN_DEFAULT);
-        //close(raaa);
-
+        
       	}
 
 
