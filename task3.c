@@ -1,7 +1,7 @@
 //добавлен фильтр, работаю над тонкими настройками, сделаны определённые правки по коду.
 //  открыл для себя наличие bpf  SO_ATTACH_FILTER.
 // (сохраняю для себя чтоб не потерять инструкции)
-//https://www.tcpdump.org/manpages/pcap-filter.7.html
+//https://www.tcpdump.org/manpages/pcap-filter.7.html и https://www.tcpdump.org/pcap.html
 
 /*
  пример ввода данных для выполнения программы 
