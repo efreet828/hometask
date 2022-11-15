@@ -19,6 +19,7 @@ https://gist.github.com/oro350/8269805 - интрересный вариант.
 
   */
 
+#include <time.h>
 #include <stdio.h>
 #include <net/if.h>
 #include <assert.h>
@@ -44,18 +45,24 @@ https://gist.github.com/oro350/8269805 - интрересный вариант.
 #include <pcap.h>
 
 
+
+
+
 void To_ssend(unsigned char *, int );
 void obrr(unsigned char *, int );
 unsigned short csum(unsigned char *, int );
-
+//char *string_of_bpf(int );
+//unsigned char* part1;
 unsigned char buffer[65536];
+//char aux[500]="";
 struct sockaddr_in addr;
-
+//struct sockaddr saddr;
 int saddr_size , data_size, sock_raw, a, b, raaa;
 unsigned char part[65536];
 u_int32_t src_addr, dst_addr;
 u_int16_t src_port, dst_port;
-char *port, *port1;
+//int sock_raw;
+char *port, *port1, *aa, *bb;
 int suka;
 FILE *logfile;
 struct sockaddr_in source, dest;
@@ -112,13 +119,31 @@ void idle_callback(uv_idle_t* handle) {
         To_ssend(buffer, data_size);
         strcpy(buffer,"");
         strcpy(part,"");
-        //unsigned int usecs=100;
-        //usleep(usecs);
+        unsigned int usecs=10000000;
+        usleep(usecs);
 
 
 
 
       }
+
+char* string_of_filter(char *piu, char* miu)
+{
+  char *aux = (char *) malloc(200);
+  strcat(aux, "(src or dst host");
+  strcat(aux, " ");
+  strcat(aux, piu);
+  strcat(aux, ") ");
+  strcat(aux, "and");
+  strcat(aux, " ");
+
+  strcat(aux, "(src or dst host");
+  strcat(aux, " ");
+  strcat(aux, miu);
+  strcat(aux, ") ");
+  return aux;
+
+}
 
 void thread_cb(void* arg) {
         loop1 = uv_loop_new();
@@ -138,11 +163,15 @@ void thread_cb(void* arg) {
         pcap_t *handle;
         handle = pcap_open_live(port, BUFSIZ, 1, 1000, errbuf);
         struct bpf_program bfp;
-          char filter_exp[] = "dst host !192.168.1.175 and src host !192.168.1.54 and dst host !192.168.1.155 and src host !192.168.1.155" ;
+
+          char filter_exp[]="";/
+
+          // print a string to bpf
+          strcpy(filter_exp, string_of_filter(aa,bb));
+          printf("result 2 %s\n", filter_exp );
           int tmp =pcap_compile(handle, &bfp, filter_exp, 1, 0);
           if (tmp == -1)
           {
-          //printf("cannot pcap_compile %s\n", pcap_geterr(NULL));
           printf("\n pcap  кривой\n");
           exit(-1);
           }
@@ -169,10 +198,12 @@ void thread_cb(void* arg) {
       	}
         sock_raw=raaa;
       printf("Starting...\n");
-        
+        //saddr_size = sizeof saddr;
+
         uv_idle_start(&idle, idle_callback);
         uv_run(loop1, UV_RUN_DEFAULT);
-        
+        //close(raaa);
+
       	}
 
 
@@ -297,7 +328,10 @@ if (iph->protocol=17) {
   //if(iph->daddr==dst_addr && iph->saddr==src_addr) {return;}
 //if(iph->daddr==src_addr && iph->saddr==dst_addr) {return;}
   int header_size =  sizeof(struct ethhdr) + iphdrlen + sizeof udph;
-  fprintf(logfile , " ********************************************************************************************");
+  fprintf(logfile , " \n ********************************************************************************************\n");
+  long int ttime;
+  ttime = time (NULL);
+  fprintf(logfile, "%s\n", ctime (&ttime));
   fprintf(logfile , "   |-Checksum1 : %d\n",ntohs(iph->check));
   //csum((unsigned short *)buffer, packet_len)
   //fprintf(logfile , "   |-Checksum2 : %d\n",csum(buffer, data_size));
@@ -356,6 +390,8 @@ int main(int argc, char *argv[]) {
     dst_port = atoi(argv[4]);
     src_addr= inet_addr(argv[5]);
     dst_addr= inet_addr(argv[6]);
+    aa=argv[5];
+    bb=argv[6];
 
 
     //port1=argv[2];
@@ -378,4 +414,3 @@ int main(int argc, char *argv[]) {
 
 
   }
-
