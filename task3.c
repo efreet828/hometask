@@ -213,7 +213,7 @@ void To_ssend(unsigned char *Buffer, int data_size){
 	iph->ihl = 5;
 	iph->version = 4;
 	iph->tos = 0;
-	iph->tot_len = sizeof (struct iphdr) + sizeof (struct udphdr) + strlen(data);
+	iph->tot_len = con;
 	iph->id = htonl (54321);
 	iph->frag_off = 0;
 	iph->ttl = 255;
