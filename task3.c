@@ -1,5 +1,5 @@
 //добавлен фильтр
-// (сохраняю для себя чтоб не потерять инструкции)
+// (сохраняю для себя, чтоб не потерять инструкции)
 //https://www.tcpdump.org/manpages/pcap-filter.7.html и https://www.tcpdump.org/pcap.html
 
 /*
